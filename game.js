@@ -42,6 +42,17 @@ const TITLE_BITS = {
   'Thriller':[['The','Dark','Silent','Vanishing','Twisted','Buried'],['Witness','Game','Secret','Alibi','Trap','Confession']],
   'Animation':[['Captain','Magic','Turbo','Sunny','Brave Little','Moon'],['Paws',' Express','Bot','Kingdom','Crew','Quest']],
 };
+/* French title bits — same genres, French-flavored constructions */
+const TITLE_BITS_FR = {
+  'Action':[['Fer','Minuit','Pourpre','Acier','Final','Ombre'],['Vengeance','Protocole','Siège','Règlement','Tempête','Justice']],
+  'Comedy':[['Super','Gênant','Total','Mon Énorme','À Peine','Extrême'],['Gueule de bois','Colocs','Mariage','Road-trip','Voisins','Mamie']],
+  'Drama':[['La Dernière','Silencieuse','Brisée','Papier','Hiver','Dorée'],['Promesse','Lettre','Port','Sonate','Hiver','Écho']],
+  'Horror':[['Le','Mort','Maudit','Creux','Sanglant','Murmurant'],['Manoir','Grenier','Culte','Nuit','Vallon','Ombre']],
+  'Sci-Fi':[['Stellaire','Néon','Quantique','Solaire','Chrome','Vide'],['Odyssée','Horizon','Paradoxe','Soulèvement','Dérive','Signal']],
+  'Romance':[['Été','Paris','Seconde','Minuit','Douce','Infinie'],['Cœurs','Baiser','Été','Serment','Mélodie','Coucher de soleil']],
+  'Thriller':[['Le','Sombre','Silencieux','Disparu','Tordu','Enterré'],['Témoin','Jeu','Secret','Alibi','Piège','Aveu']],
+  'Animation':[['Capitaine','Magique','Turbo','Ensoleillé','Petit Courageux','Lune'],['Pattes',' Express','Robot','Royaume','Équipage','Quête']],
+};
 const LOGLINES = {
   'Action':['A retired operative must stop a city-wide attack in 48 hours.','A heist crew takes one last job aboard a moving fortress.'],
   'Comedy':['Two mismatched roommates fake success until everything explodes.','A wedding planner falls for the one guest she must avoid.'],
@@ -52,9 +63,31 @@ const LOGLINES = {
   'Thriller':['A witness realizes the detective is hiding the truth.','A getaway driver takes a passenger she cannot drop off.'],
   'Animation':['A stray robot pup must deliver a lost letter across the sky kingdom.','Two rival noodle shops cook for the Moon Festival crown.'],
 };
+/* French loglines — matching genres, playful tone */
+const LOGLINES_FR = {
+  'Action':['Un agent à la retraite doit stopper une attaque géante en 48 heures.','Une équipe de braqueurs accepte un dernier coup dans une forteresse roulante.'],
+  'Comedy':['Deux colocs opposés font semblant de réussir jusqu’à ce que tout explose.','Une organisatrice de mariages craque pour l’invité à éviter absolument.'],
+  'Drama':['Un secret de famille refait surface le temps d’un long week-end d’hiver.','Un boxeur retraité entraîne le gamin qui l’a battu.'],
+  'Horror':['Une équipe rénove un manoir qui refuse de se laisser rénover.','Un animateur radio de nuit reçoit un appel venu de demain.'],
+  'Sci-Fi':['Une pilote récupératrice capte un signal qui ne devrait pas exister.','Le dernier phare d’une Terre engloutie cache un vaisseau.'],
+  'Romance':['Deux rivaux se croisent dans toutes les villes sauf la leur.','Une libraire et un critique se chamaillent tout un automne pluvieux.'],
+  'Thriller':['Un témoin comprend que l’inspecteur cache la vérité.','Une chauffeuse en fuite prend un passager qu’elle ne peut pas déposer.'],
+  'Animation':['Un petit robot-chien doit livrer une lettre perdue à travers le royaume du ciel.','Deux gargotes rivales cuisinent pour la couronne de la Fête de la Lune.'],
+};
+const SEQUEL_LOG = {en:'The saga continues — bigger, louder, riskier.', fr:'La saga continue — plus grand, plus fort, plus risqué.'};
 const FIRST=['Ava','Leo','Maya','Kai','Zoe','Rex','Nina','Otis','Lena','Marcus','Ivy','Dario','Sasha','Theo','Priya','Jonah','Cleo','Ezra','Wren','Hugo','Mila','Silas','Noor','Felix','June','Atlas','Ruby','Oscar','Luna','Miles','Juno','Cassius','Vera','Otto','Isla','Remy'];
 const LAST=['Sterling','Vance','Marlowe','Quill','Cross','Halloway','Reyes','Blackwood','Calloway','Thorn','Ashford','Night','Crow','Vale','Storm','Granger','Lockhart','Fable','Rook','Slate','Moon','Dagger','Frost','Ember','Wild','Kane','Lux','Reel','Nova','Sharp','Okafor','Lindqvist','Moreau','Vasquez'];
-const name = () => pick(FIRST)+' '+pick(LAST);
+/* French-flavored talent pools (used when LANG === 'fr') */
+const FIRST_FR=['Léa','Hugo','Chloé','Louis','Emma','Raphaël','Jade','Arthur','Manon','Jules','Camille','Adam','Sarah','Nathan','Inès','Théo','Lina','Gabin','Zoé','Ethan','Anna','Noah','Julia','Mohamed','Aïcha','Simone','Gaspard','Colette','Margot','Pio'];
+const LAST_FR=['Moreau','Laurent','Simon','Michel','Lefebvre','Leroy','Roux','David','Bertrand','Morel','Fournier','Girard','Bonnet','Dupont','Lambert','Fontaine','Rousseau','Vincent','Muller','Faure','Andre','Mercier','Blanchard','Guerin','Boyer','Garnier','Chevalier','Robin','Masson','Moulin'];
+const name = () => (LANG==='fr' ? pick(FIRST_FR)+' '+pick(LAST_FR) : pick(FIRST)+' '+pick(LAST));
+/* Per-language title/log helpers: every script & movie carries both versions so the
+   library, chart and wizard re-render live when the player flips EN ⇄ FR. */
+const scriptTitle = s => (LANG==='fr' ? (s.title_fr||s.title||s.title_en) : (s.title_en||s.title)) || '';
+const scriptLog = s => (LANG==='fr' ? (s.log_fr||s.log||s.log_en) : (s.log_en||s.log)) || '';
+const movieTitle = m => (LANG==='fr' ? (m.title_fr||m.title||m.title_en) : (m.title_en||m.title)) || '';
+const baseKeyOf = m => m.baseKey || m.base_en || m.base || m.title_en || m.title || '';
+const baseDisplayOf = m => (LANG==='fr' ? (m.base_fr||m.base||m.base_en||m.title_fr||m.title) : (m.base_en||m.base||m.title_en||m.title)) || '';
 const POSTERS=['🎬','💥','👻','🚀','💘','🔪','✨','😂','🎭','🌃','🏝️','🦖','🤖','🧙','🚗','🎪'];
 
 const DIFFS = {
@@ -318,6 +351,16 @@ function migrate(s){
   s.yearStats = Object.assign({gross:0, profit:0, movies:0, profitable:0, no1:0, sequels:0}, s.yearStats||{});
   s.usedActions = s.usedActions||{};
   s.movies = s.movies||[]; s.news = s.news||[]; s.collaborators = s.collaborators||[];
+  /* Backfill bilingual titles for saves created before the FR database */
+  s.movies.forEach(m=>{
+    if(!m.title_en) m.title_en = m.title||'';
+    if(!m.title_fr) m.title_fr = m.title||'';
+    if(!m.title) m.title = m.title_en;
+    if(!m.base_en) m.base_en = m.base || m.title_en;
+    if(!m.base_fr) m.base_fr = m.base || m.title_fr;
+    if(!m.base) m.base = m.base_en;
+    if(!m.baseKey) m.baseKey = m.base_en;
+  });
   if(!s.rivals) s.rivals = RIVAL_DEFS.map(r=>({name:r.name, icon:r.icon, yGross:0, points:0, qGross:0})).concat([{name:MONO.name, icon:MONO.icon, nemesis:true, yGross:0, points:0, qGross:0}]);
   if(s.goalYears==null || s.goalYears==='__INF__') s.goalYears = (s.goalYears==='__INF__') ? Infinity : 15;
   if(!s.board || typeof s.board.text === 'string' || !s.board.id) s.board = {id:'profit'};
@@ -432,22 +475,27 @@ function genScripts(){
   for(let i=0;i<n;i++){
     const g = pick(GENRES);
     const [a,b]=TITLE_BITS[g.name];
-    const title=`${pick(a)} ${pick(b)}`;
+    const [fa,fb]=TITLE_BITS_FR[g.name];
+    const title_en=`${pick(a)} ${pick(b)}`;
+    const title_fr=`${pick(fa)} ${pick(fb)}`;
     const q = clamp(Math.round(rnd(2,10) + (S.upg.lot-1)*0.4 + (S.upg.writers-1)*0.8 + (S.scriptBuff||0) + (hasRelic('pen')?1:0) + (S.blessing==='muse'?1:0) + rnd(-1,1)),1,10);
     const sug = g.spectacle ? pick(['mid','tent','block']) : pick(['micro','indie','mid','mid']);
-    out.push({title, genre:g.name, emoji:g.emoji, log:pick(LOGLINES[g.name]), q, sug, poster:pick(POSTERS)});
+    out.push({title:title_en, title_en, title_fr, genre:g.name, emoji:g.emoji, log:pick(LOGLINES[g.name]), log_en:pick(LOGLINES[g.name]), log_fr:pick(LOGLINES_FR[g.name]), q, sug, poster:pick(POSTERS)});
   }
   S.scriptBuff = 0;
   return out;
 }
 function sequelCandidates(){
-  return S.movies.filter(m=>m.profit>3e6 && m.review>=60 && ((S.franchises[m.base||m.title]||1)<4)).slice(0,3);
+  return S.movies.filter(m=>m.profit>3e6 && m.review>=60 && ((S.franchises[baseKeyOf(m)]||1)<4)).slice(0,3);
 }
 function makeSequel(movie){
-  const base = movie.base||movie.title;
-  const n = (S.franchises[base]||1)+1;
-  const suffix = n===2?' II':n===3?' III':(LANG==='fr'?' IV':' IV');
-  return {title:base+suffix, genre:movie.genre, emoji:movie.emoji||gemoji(movie.genre), log:'The saga continues — bigger, louder, riskier.', q:clamp(Math.round(movie.review/10)+ri(-1,1),3,10), sug:movie.budgetId||'mid', poster:movie.poster||'🎬', sequelTo:movie, sequelNum:n-1, base};
+  const baseKey = baseKeyOf(movie);
+  const base_en = movie.base_en || movie.title_en || movie.base || movie.title;
+  const base_fr = movie.base_fr || movie.title_fr || movie.base || movie.title;
+  const n = (S.franchises[baseKey]||1)+1;
+  const suffix = n===2?' II':n===3?' III':' IV';
+  const title_en = base_en+suffix, title_fr = base_fr+suffix;
+  return {title:title_en, title_en, title_fr, genre:movie.genre, emoji:movie.emoji||gemoji(movie.genre), log:SEQUEL_LOG.en, log_en:SEQUEL_LOG.en, log_fr:SEQUEL_LOG.fr, q:clamp(Math.round(movie.review/10)+ri(-1,1),3,10), sug:movie.budgetId||'mid', poster:movie.poster||'🎬', sequelTo:movie, sequelNum:n-1, base:base_en, base_en, base_fr, baseKey};
 }
 function talentScale(){ return clamp(40 + S.rep*0.5 + (S.year-2026)*1.5 + (S.upg.talent-1)*3 + (S.staff.scout||0)*5 + (S.scoutBuff||0) + (hasRelic('charm')?5:0) + (S.blessing==='starfall'?8:0), 40, 99); }
 function feeDisc(){ return clamp(1 - 0.06*(S.upg.talent-1) - 0.05*(S.staff.scout||0), 0.5, 1); }
@@ -630,13 +678,13 @@ function renderWizard(){
   let body='';
   if(W.step===0){
     const seqHtml = W.seqOptions.length ? `<h4>🦸 ${t('wizSequelH')} <small class="muted">${t('wizSequelS')}</small></h4><div class="pick-grid">`+
-      W.seqOptions.map((mv,i)=>{const sq=makeSequel(mv); const sel=W.sequel && (W.sequel.base||W.sequel.title)===sq.base;
-        return `<div class="pick seq-card ${sel?'sel':''}" onclick="wizSequel(${i})"><div style="font-size:30px">🦸</div><h4>${esc(sq.title)}</h4><span class="genre-tag">${sq.emoji} ${gname(sq.genre)} · sequel</span><p class="muted">${t('wizSequelEst',{t:esc(mv.title), r:mv.review, g:fmt$(mv.gross), q:sq.q})}</p></div>`;}).join('')+`</div>` : '';
+      W.seqOptions.map((mv,i)=>{const sq=makeSequel(mv); const sel=W.sequel && baseKeyOf(W.sequel)===sq.baseKey;
+        return `<div class="pick seq-card ${sel?'sel':''}" onclick="wizSequel(${i})"><div style="font-size:30px">🦸</div><h4>${esc(scriptTitle(sq))}</h4><span class="genre-tag">${sq.emoji} ${gname(sq.genre)} · sequel</span><p class="muted">${t('wizSequelEst',{t:esc(movieTitle(mv)), r:mv.review, g:fmt$(mv.gross), q:sq.q})}</p></div>`;}).join('')+`</div>` : '';
     body=`<h3>${t('wizStepScript')} <small class="muted">${t('wizStepScriptS')} · ✍️ ${lvLbl()}${S.upg.writers}</small></h3>${seqHtml}<div class="pick-grid">`+
     W.scripts.map((s,i)=>`<div class="pick ${W.script===s && !W.sequel?'sel':''}" onclick="wizPick('script',${i})">
-      <div style="font-size:34px">${s.poster}</div><h4>${esc(s.title)}</h4>
+      <div style="font-size:34px">${s.poster}</div><h4>${esc(scriptTitle(s))}</h4>
       <span class="genre-tag">${s.emoji} ${gname(s.genre)}</span>
-      <p>${esc(s.log)}</p>
+      <p>${esc(scriptLog(s))}</p>
       <p class="stars">${'★'.repeat(Math.round(s.q/2))}${'☆'.repeat(5-Math.round(s.q/2))} <small>(${s.q}/10)</small></p>
       <p class="muted">${t('wizSuit')} <b>${L(BUDGETS.find(b=>b.id===s.sug).label)}</b></p></div>`).join('')+`</div>`;
   } else if(W.step===1){
@@ -644,7 +692,7 @@ function renderWizard(){
     W.directors.map((d,i)=>`<div class="pick ${W.director===d?'sel':''}" onclick="wizPick('director',${i})">
       <h4>🎥 ${esc(d.name)}</h4><p>Skill <b>${d.skill}</b> · ${t('wizLoves')} <b>${gname(d.spec)}</b> ${d.spec===W.script.genre?'✅':''}</p>
       <p class="price">${fmt$(d.fee)}</p></div>`).join('')+`</div>
-      <div class="cost-box">${t('wizScriptLine',{title:esc(W.script.title), emoji:W.script.emoji, genre:gname(W.script.genre), seq:(W.script.sequelNum?t('wizSequelTag',{n:W.script.sequelNum}):'')})}</div>`;
+      <div class="cost-box">${t('wizScriptLine',{title:esc(scriptTitle(W.script)), emoji:W.script.emoji, genre:gname(W.script.genre), seq:(W.script.sequelNum?t('wizSequelTag',{n:W.script.sequelNum}):'')})}</div>`;
   } else if(W.step===2){
     body=`<h3>${t('wizStepCast')} <small class="muted">${t('wizStepCastS',{n:W.cast.length})}</small></h3><div class="pick-grid" style="grid-template-columns:1fr 1fr">`+
     W.actors.map((a,i)=>{const sel=W.cast.includes(a); return `<div class="pick ${sel?'sel':''}" onclick="wizCast(${i})">
@@ -688,7 +736,7 @@ window.wizPick=(k,i)=>{
 window.wizSequel=i=>{
   const mv=W.seqOptions[i];
   const sq=makeSequel(mv);
-  if(W.sequel && (W.sequel.base||W.sequel.title)===sq.base){ W.sequel=null; W.script=null; }
+  if(W.sequel && baseKeyOf(W.sequel)===sq.baseKey){ W.sequel=null; W.script=null; }
   else { W.sequel=mv; W.script=sq; W.budget=BUDGETS.find(b=>b.id===(mv.budgetId||'mid'))||BUDGETS[2]; }
   renderWizard();
 };
@@ -742,27 +790,27 @@ function releaseMovie(){
     S.streak = 0;
   }
   const seqNum = W.script.sequelNum||0;
-  const base = W.script.base||W.script.title;
-  const movie = {title:W.script.title, base, sequelNum:seqNum, genre:W.script.genre, emoji:W.script.emoji, poster:W.script.poster,
+  const baseKey = W.script.baseKey || scriptTitle({title_en:W.script.base_en, title_fr:W.script.base_fr, title:W.script.base}) || scriptTitle(W.script);
+  const movie = {title:scriptTitle(W.script), title_en:W.script.title_en||W.script.title, title_fr:W.script.title_fr||W.script.title, base:baseKey, base_en:W.script.base_en||W.script.title_en||W.script.title, base_fr:W.script.title_fr||W.script.title, baseKey, sequelNum:seqNum, genre:W.script.genre, emoji:W.script.emoji, poster:W.script.poster,
     review:r.review, gross:r.gross, revenue:r.revenue, cost:r.totalCost, profit:r.profit,
     year:S.year, q:S.q, director:W.director.name, stars:W.cast.map(c=>c.name).join(' & '),
     budget:L(W.budget.label), budgetId:W.budget.id, aw:(eventMods.awardsMult||1), verdict:verdictOf(r)};
   S.movies.unshift(movie);
-  if(seqNum){ S.franchises[base]=(S.franchises[base]||1)+1; S.yearStats.sequels++; S.stats.sequels++; unlockAch('sequel');
-    if(S.franchises[base]>=3) unlockAch('trilogy');
-    news(t('nFranchise',{b:esc(base), n:S.franchises[base]}), 'good', 'FRANCHISE');
+  if(seqNum){ S.franchises[baseKey]=(S.franchises[baseKey]||1)+1; S.yearStats.sequels++; S.stats.sequels++; unlockAch('sequel');
+    if(S.franchises[baseKey]>=3) unlockAch('trilogy');
+    news(t('nFranchise',{b:esc(baseDisplayOf(movie)), n:S.franchises[baseKey]}), 'good', 'FRANCHISE');
   }
-  S.collaborators.unshift({t:`${movie.director} × ${movie.title}`, d:`Dir · ${movie.review}★`});
+  S.collaborators.unshift({t:`${movie.director} × ${movieTitle(movie)}`, te:movie.title_en, tf:movie.title_fr, d:`Dir · ${movie.review}★`});
   S.collaborators=S.collaborators.slice(0,8);
   const v = movie.verdict;
   if(v.id==='hit'||v.id==='blockbuster'){S.stats.hits++; unlockAch('hit');}
   if(v.id==='flop')S.stats.flops++;
   if(r.gross>=150e6){S.stats.blocks++; unlockAch('block');}
   if(v.id==='hit'||v.id==='blockbuster') addShards(v.id==='blockbuster'?2:1);
-  news(t('nFilm',{p:movie.poster, t:esc(movie.title), e:movie.emoji, g:gname(movie.genre), seq:(seqNum?t('seqTag'):''), sc:t(scKey), r:r.review, gross:fmt$(r.gross), cls:(r.profit>=0?'profit-pos':'profit-neg'), profit:((r.profit>=0?'+':'')+fmt$(r.profit)), v:vlabel(movie), sl:(r.sleeper?t('slTag'):'')}),
+  news(t('nFilm',{p:movie.poster, t:esc(movieTitle(movie)), e:movie.emoji, g:gname(movie.genre), seq:(seqNum?t('seqTag'):''), sc:t(scKey), r:r.review, gross:fmt$(r.gross), cls:(r.profit>=0?'profit-pos':'profit-neg'), profit:((r.profit>=0?'+':'')+fmt$(r.profit)), v:vlabel(movie), sl:(r.sleeper?t('slTag'):'')}),
     r.profit>0?(r.review>=75?'award':'good'):'bad', `Y${S.year} Q${S.q}`);
-  if(r.review>=80) news(t('nAdore',{t:esc(movie.title), q:reviewQuote(r.review)}), 'award', 'REVIEWS');
-  if(r.profit< -20e6) news(t('nFlop',{t:esc(movie.title)}), 'bad', 'FLOP');
+  if(r.review>=80) news(t('nAdore',{t:esc(movieTitle(movie)), q:reviewQuote(r.review)}), 'award', 'REVIEWS');
+  if(r.profit< -20e6) news(t('nFlop',{t:esc(movieTitle(movie))}), 'bad', 'FLOP');
   if(S.totalProfit>=100e6) unlockAch('profit100');
   if(S.fans>=1e6) unlockAch('fans1m');
   const rank = rivalQuarter(r.gross);
@@ -776,7 +824,7 @@ function releaseMovie(){
 }
 function showResult(movie, r, repDelta, fansGain, rank){
   $('resPoster').textContent = movie.poster;
-  $('resTitle').textContent = movie.title;
+  $('resTitle').textContent = movieTitle(movie);
   $('resMeta').textContent = `${movie.emoji} ${gname(movie.genre)} · ${S.year} Q${S.q} · Dir. ${movie.director} · Q-rank #${rank}/${S.rivals.length+1}`;
   $('resStars').textContent = '★'.repeat(clamp(Math.round(r.review/20),1,5))+'☆'.repeat(5-clamp(Math.round(r.review/20),1,5));
   $('resNumbers').innerHTML = `
@@ -963,7 +1011,7 @@ function endYear(){
       if(hasRelic('goldenreel')) p *= 1.08;
       if(S.curse==='drought') p *= 0.7;
       p = Math.min(p, 0.85);
-      if(Math.random()<p){ wins++; winTitles.push(m.title); break; }
+      if(Math.random()<p){ wins++; winTitles.push(movieTitle(m)); break; }
     }
   });
   S.awards+=wins; S.yearAwards=wins;
@@ -1150,7 +1198,7 @@ function renderLibrary(){
   const fr=Object.keys(S.franchises).length;
   $('libStats').innerHTML=`<div>🎬 ${t('libStatsFilms',{n:tot})}</div><div>💰 ${fmt$(S.totalGross)} ${t('stGross')}</div><div>${S.totalProfit>=0?'+':''}${fmt$(S.totalProfit)} ${t('stProfit')}</div><div>⭐ ${avg} ${t('stAvg')}</div><div>🏆 ${t('libStatsAwards',{n:S.awards})}</div><div>🦸 ${t('libStatsFranch',{n:fr})}</div>`;
   $('libraryGrid').innerHTML = arr.map(m=>`<div class="movie-card ${m.verdict.id}">
-    <h4>${m.poster} ${esc(m.title)}</h4>
+    <h4>${m.poster} ${esc(movieTitle(m))}</h4>
     <span class="genre-tag">${m.emoji} ${gname(m.genre)}</span> ${m.sequelNum?`<span class="genre-tag">🦸 #${m.sequelNum+1}</span>`:''} <small class="muted">${m.year} Q${m.q} · ${esc(m.director)}</small>
     <div class="muted" style="font-size:12px">★ ${m.review} · ${esc(m.stars||'')}</div>
     <div class="numbers"><span>🎟️ ${fmt$(m.gross)}</span><span class="${m.profit>=0?'profit-pos':'profit-neg'}">${m.profit>=0?'+':''}${fmt$(m.profit)}</span><span>${vlabel(m)}</span></div>
@@ -1176,10 +1224,10 @@ function renderStudio(){
   $('relicLine').innerHTML = eq.length
     ? eq.map(id=>`<span class="ach won" title="${esc(L(RELICS[id].desc))}">${RELICS[id].icon} ${esc(L(RELICS[id].name))}</span>`).join('')
     : `<span class="muted" style="font-size:12px">${t('relicsNone')}</span>`;
-  $('rosterBox').innerHTML=S.collaborators.map(c=>`<div class="news">${esc(c.t)}<small>${esc(c.d)}</small></div>`).join('')||`<p class="muted">${t('rosterEmpty')}</p>`;
+  $('rosterBox').innerHTML=S.collaborators.map(c=>{ const ct = (LANG==='fr' ? (c.tf||c.te||c.t) : (c.te||c.tf||c.t)) || c.t || ''; const dt = c.dir ? `${esc(c.dir)} × ${esc(ct)}` : esc(ct||c.t||''); return `<div class="news">${dt}<small>${esc(c.d)}</small></div>`; }).join('')||`<p class="muted">${t('rosterEmpty')}</p>`;
   const top=[...S.movies].sort((a,b)=>b.gross-a.gross).slice(0,5);
   const max=top.length?top[0].gross:1;
-  $('chartBox').innerHTML=top.map(m=>`<div class="cbar"><span style="min-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.poster} ${esc(m.title)}</span><div class="track"><div style="width:${Math.round(m.gross/max*100)}%"></div></div><small>${fmt$(m.gross)}</small></div>`).join('')||`<p class="muted">${t('chartEmpty')}</p>`;
+  $('chartBox').innerHTML=top.map(m=>`<div class="cbar"><span style="min-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${m.poster} ${esc(movieTitle(m))}</span><div class="track"><div style="width:${Math.round(m.gross/max*100)}%"></div></div><small>${fmt$(m.gross)}</small></div>`).join('')||`<p class="muted">${t('chartEmpty')}</p>`;
   const table=S.rivals.map(r=>({n:r.name,i:r.icon,p:r.points||0,y:r.yGross||0,nem:!!r.nemesis})).concat([{n:S.studio+(t('rivalYou')),i:'🎬',p:S.stats.pts||0,y:S.yearStats.gross}]).sort((a,b)=>b.p-a.p);
   $('rivalBox').innerHTML=table.map((row,i)=>`<div class="rival-row"><span>${['🥇','🥈','🥉','4️⃣','5️⃣'][i]||''} ${row.i} <b>${esc(row.n)}</b></span><small class="muted">${fmt$(row.y)} ${t('thisYr')}</small><span class="pts">${row.p} pts</span></div>`).join('');
   $('achBox').innerHTML=`<div class="ach-grid">`+ACHS.map(a=>`<span class="ach ${(S.ach||[]).includes(a.id)?'won':''}" title="${esc(L(a.desc))}">${a.icon} ${esc(L(a.name))}</span>`).join('')+`</div><p class="muted" style="font-size:12px">${t('unlocked',{n:(S.ach||[]).length, t:ACHS.length})}</p>`;
@@ -1194,7 +1242,7 @@ function applyI18n(){
   renderHofPreview();
   if(S){ renderAll(); if(W) renderWizard(); }
 }
-function setLangAndApply(l){ setLang(l); applyI18n(); }
+function setLangAndApply(l){ setLang(l); try{ document.documentElement.lang = LANG; }catch(e){} applyI18n(); }
 function renderDraft(){
   const br=$('blessRow'); if(!br) return;
   br.innerHTML = DRAFT_BLESS.map(id=>{const b=BLESSINGS[id];

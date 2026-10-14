@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PlayGround — 3D Collector (Desktop)</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0b1020; color: #e8ecff;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; }
+  #hud { position: fixed; top: 12px; left: 12px; right: 12px; display: flex; gap: 12px;
+    align-items: center; justify-content: space-between; pointer-events: none;
+    font-size: 14px; text-shadow: 0 1px 4px #000; }
+  #hud .pill { background: #141b36cc; border: 1px solid #ffffff2a; border-radius: 999px;
+    padding: 6px 12px; }
+  #help { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+    background: #141b36cc; border: 1px solid #ffffff2a; border-radius: 10px;
+    padding: 8px 14px; font-size: 13px; white-space: nowrap; max-width: 94vw;
+    overflow: hidden; text-overflow: ellipsis; }
+  #toast { position: fixed; top: 56px; left: 50%; transform: translateX(-50%);
+    background: #1ed76022; border: 1px solid #1ed76088; padding: 6px 14px;
+    border-radius: 999px; font-size: 13px; opacity: 0; transition: opacity .3s; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js" } }
+</script>
+</head>
+<body>
+<div id="app"></div>
+<div id="hud">
+  <span class="pill" id="score">Score 0 / 10</span>
+  <span class="pill">PlayGround 3D — Desktop</span>
+  <span class="pill" id="time">00:00</span>
+</div>
+<div id="toast"></div>
+<div id="help">WASD / arrows to move &nbsp;•&nbsp; collect 10 orbs &nbsp;•&nbsp; R to restart &nbsp;•&nbsp; drag on touch</div>
+<script type="module">
+import * as THREE from 'three';
+
+const app = document.getElementById('app');
+const scoreEl = document.getElementById('score');
+const timeEl = document.getElementById('time');
+const toast = document.getElementById('toast');
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0b1020);
+scene.fog = new THREE.Fog(0x0b1020, 18, 42);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 8.5, 11);
+camera.lookAt(0, 0, 0);
+
+scene.add(new THREE.HemisphereLight(0xbdd0ff, 0x223322, 1.1));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(6, 12, 4);
+scene.add(sun);
+
+const ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(26, 26),
+  new THREE.MeshStandardMaterial({ color: 0x182247, roughness: 0.9 })
+);
+ground.rotation.x = -Math.PI / 2;
+scene.add(ground);
+
+const grid = new THREE.GridHelper(26, 26, 0x3af2ad, 0x2a3560);
+grid.position.y = 0.01;
+scene.add(grid);
+
+// Arena walls (visual only)
+const wallMat = new THREE.MeshStandardMaterial({ color: 0x2c3a6e, roughness: 0.7 });
+for (const [w, d, x, z] of [[26, 0.6, 0, -13], [26, 0.6, 0, 13], [0.6, 26, -13, 0], [0.6, 26, 13, 0]]) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 1.2, d), wallMat);
+  m.position.set(x, 0.6, z);
+  scene.add(m);
+}
+
+const player = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 1),
+  new THREE.MeshStandardMaterial({ color: 0x4aa8ff, roughness: 0.35, metalness: 0.15 })
+);
+player.position.y = 0.5;
+scene.add(player);
+
+const orbs = [];
+const orbGeo = new THREE.SphereGeometry(0.42, 24, 18);
+function spawnOrbs(n) {
+  for (const m of orbs) scene.remove(m);
+  orbs.length = 0;
+  for (let i = 0; i < n; i++) {
+    const m = new THREE.Mesh(orbGeo,
+      new THREE.MeshStandardMaterial({ color: 0xffc93c, emissive: 0x7a5200, roughness: 0.3 }));
+    m.position.set((Math.random() * 2 - 1) * 11, 0.45, (Math.random() * 2 - 1) * 11);
+    m.userData.phase = Math.random() * Math.PI * 2;
+    scene.add(m);
+    orbs.push(m);
+  }
+}
+
+let score = 0, total = 10, startT = performance.now(), won = false;
+spawnOrbs(total);
+
+const keys = new Set();
+addEventListener('keydown', e => {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+  keys.add(e.key.toLowerCase());
+  if (e.key.toLowerCase() === 'r') reset();
+});
+addEventListener('keyup', e => keys.delete(e.key.toLowerCase()));
+
+// Touch drag: move toward drag direction
+let touch = null;
+addEventListener('pointerdown', e => { if (e.pointerType !== 'mouse') touch = { x: e.clientX, y: e.clientY }; });
+addEventListener('pointermove', e => {
+  if (!touch || e.pointerType === 'mouse') return;
+  keys.delete('arrowleft'); keys.delete('arrowright'); keys.delete('arrowup'); keys.delete('arrowdown');
+  const dx = e.clientX - touch.x, dy = e.clientY - touch.y;
+  if (Math.abs(dx) > 12) keys.add(dx > 0 ? 'arrowright' : 'arrowleft');
+  if (Math.abs(dy) > 12) keys.add(dy > 0 ? 'arrowdown' : 'arrowup');
+});
+addEventListener('pointerup', () => {
+  touch = null;
+  keys.delete('arrowleft'); keys.delete('arrowright'); keys.delete('arrowup'); keys.delete('arrowdown');
+});
+
+function reset() {
+  score = 0; won = false; startT = performance.now();
+  player.position.set(0, 0.5, 0);
+  spawnOrbs(total);
+  scoreEl.textContent = `Score 0 / ${total}`;
+  showToast('Restarted — collect 10 orbs');
+}
+
+function showToast(msg) {
+  toast.textContent = msg;
+  toast.style.opacity = 1;
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => toast.style.opacity = 0, 1600);
+}
+
+const vel = new THREE.Vector3();
+const clock = new THREE.Clock();
+function tick() {
+  requestAnimationFrame(tick);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  const ax = (keys.has('a') || keys.has('arrowleft') ? -1 : 0) + (keys.has('d') || keys.has('arrowright') ? 1 : 0);
+  const az = (keys.has('w') || keys.has('arrowup') ? -1 : 0) + (keys.has('s') || keys.has('arrowdown') ? 1 : 0);
+  vel.x += (ax * 26 - vel.x * 8) * dt;
+  vel.z += (az * 26 - vel.z * 8) * dt;
+  player.position.x = THREE.MathUtils.clamp(player.position.x + vel.x * dt, -11.5, 11.5);
+  player.position.z = THREE.MathUtils.clamp(player.position.z + vel.z * dt, -11.5, 11.5);
+  player.rotation.y += dt * (Math.abs(vel.x) + Math.abs(vel.z)) * 0.12;
+  player.position.y = 0.5 + Math.abs(Math.sin(t * 6)) * 0.06;
+
+  for (let i = orbs.length - 1; i >= 0; i--) {
+    const m = orbs[i];
+    m.rotation.y += dt * 2;
+    m.position.y = 0.45 + Math.sin(t * 3 + m.userData.phase) * 0.12;
+    if (m.position.distanceTo(player.position) < 1.0) {
+      scene.remove(m);
+      orbs.splice(i, 1);
+      score++;
+      scoreEl.textContent = `Score ${score} / ${total}`;
+      if (score >= total && !won) {
+        won = true;
+        const s = Math.round((performance.now() - startT) / 1000);
+        showToast(`You win in ${s}s — press R to play again`);
+      }
+    }
+  }
+
+  // Idle camera drift so screenshots always show a live 3D scene
+  camera.position.x = Math.sin(t * 0.1) * 1.2;
+  camera.lookAt(player.position.x * 0.35, 0, player.position.z * 0.35);
+
+  const s = Math.floor((performance.now() - startT) / 1000);
+  timeEl.textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+
+  renderer.render(scene, camera);
+}
+tick();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

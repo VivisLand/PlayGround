@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Movie Mogul — Studio Chairman Sim</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>" />
+<meta name="description" content="Become the ultimate Movie Mogul. Greenlight films, hire talent, conquer the box office. A Football Chairman-style studio sim." />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+  <!-- START SCREEN -->
+  <div id="startScreen" class="screen">
+    <div class="marquee-top" data-i18n="marquee">★ NOW SHOWING ★ BOX OFFICE ★ AWARDS SEASON ★</div>
+    <div class="start-hero">
+      <div class="spotlight"></div>
+      <div class="lang-row">
+        <button id="langEN" class="lang-btn active">🇬🇧 EN</button>
+        <button id="langFR" class="lang-btn">🇫🇷 FR</button>
+      </div>
+      <h1 class="logo">🎬 MOVIE<br/><span>MOGUL</span></h1>
+      <p class="tagline" data-i18n="tagline">Like <b>Football Chairman</b> meets Hollywood.<br/>Greenlight. Cast. Release. Rule the box office.</p>
+      <div class="start-card">
+        <label data-i18n="studioName">Studio name</label>
+        <input id="studioNameInput" maxlength="24" value="Starlight Pictures" />
+        <label data-i18n="difficulty">Difficulty</label>
+        <div class="diff-row" id="diffRow">
+          <button data-diff="indie" class="diff">🎞️ Indie<br/><small>$20M · Rep 45</small></button>
+          <button data-diff="major" class="diff active">🎥 Major<br/><small>$50M · Rep 55</small></button>
+          <button data-diff="behemoth" class="diff">🌟 Behemoth<br/><small>$120M · Rep 65</small></button>
+        </div>
+        <label data-i18n="careerLength">Career length</label>
+        <div class="diff-row" id="lengthRow">
+          <button data-length="10" class="diff len" data-i18n="yrs10">10 yrs</button>
+          <button data-length="15" class="diff len active" data-i18n="yrs15">15 yrs</button>
+          <button data-length="endless" class="diff len" data-i18n="endless">Endless</button>
+        </div>
+        <label data-i18n="blessTitle">🌟 Opening blessing — choose one</label>
+        <div class="diff-row" id="blessRow"></div>
+        <label><span data-i18n="curseTitle">😈 Devil's deal — take a curse for +$10M (optional)</span></label>
+        <div class="diff-row" id="curseRow"></div>
+        <label data-i18n="relicsTitle">🎖️ Relics — legacy loot, pick up to 3</label>
+        <div id="relicDraft" class="relic-grid"></div>
+        <button id="startBtn" class="btn-gold big" data-i18n="startStudio">▶ START STUDIO</button>
+        <div class="row-between">
+          <button id="continueBtn" class="btn-ghost hidden" data-i18n="continueGame">Continue saved game</button>
+          <button id="howBtn" class="btn-ghost" data-i18n="howToPlay">How to play</button>
+        </div>
+      </div>
+      <div class="hof-preview" id="hofPreview"></div>
+    </div>
+    <div id="howModal" class="modal hidden">
+      <div class="modal-card">
+        <h2 data-i18n="howTitle">How to play</h2>
+        <ol class="how-list">
+          <li data-i18n="how1"><b>Each turn = 1 movie.</b> 4 movies = 1 year. Genre trends shift every year.</li>
+          <li data-i18n="how2"><b>Greenlight a film:</b> pick a script → hire a director → cast 2 stars → set budget &amp; marketing → choose release window.</li>
+          <li data-i18n="how3"><b>Box office</b> depends on script quality, talent fit, genre heat 🔥, season, budget, marketing &amp; your reputation.</li>
+          <li data-i18n="how4"><b>Reviews</b> build reputation &amp; fans. <b>Awards</b> are handed out each December.</li>
+          <li data-i18n="how5"><b>Random events</b> (scandals, viral trailers, strikes, merch deals…) demand chairman-style decisions — plus rival studios race you every quarter.</li>
+          <li data-i18n="how6"><b>Between films:</b> throw premiere parties, run script workshops, scout talent, fund awards campaigns, take bank loans, cash out your catalog on streaming.</li>
+          <li data-i18n="how7"><b>Upgrade everything:</b> lot, marketing, distribution, writers' room, VFX lab, talent agency, streaming platform, PR &amp; legal. Hire executives. Launch sequels &amp; franchises.</li>
+          <li data-i18n="how8">📜 <b>Fil rouge:</b> follow the <b>Golden Reel Saga</b> — 5 chapters against your nemesis <b>Monolith Studios</b>, all the way to the final showdown.</li>
+          <li data-i18n="how9">🎲 <b>Rogue-lite:</b> draft a blessing (and maybe a curse…), ride profit <b>streaks</b>, survive yearly <b>twists</b>, earn <b>shards</b> and unlock permanent <b>relics</b> for future careers.</li>
+          <li data-i18n="how10"><b>Win:</b> become a <b>Legendary Mogul</b> ($500M cash, 85 rep, 3 awards) or claim the <b>Golden Reel</b>. <b>Lose:</b> bankruptcy!</li>
+        </ol>
+        <button class="btn-gold" id="howClose" data-i18n="gotIt">Got it!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="screen hidden">
+    <header id="topbar">
+      <div class="tb-left">
+        <div class="tb-logo">🎬</div>
+        <div>
+          <div id="tbStudio" class="tb-studio">Starlight</div>
+          <div id="tbDate" class="tb-date">2026 · Q1</div>
+        </div>
+      </div>
+      <div class="tb-stats">
+        <div class="stat cash"><span class="ico">💰</span><span id="statCash">$50.0M</span></div>
+        <div class="stat"><span class="ico">⭐</span><span id="statRep">55</span></div>
+        <div class="stat"><span class="ico">👥</span><span id="statFans">10K</span></div>
+        <div class="stat"><span class="ico">🏆</span><span id="statAwards">0</span></div>
+      </div>
+      <button id="menuBtn" class="icon-btn" title="Menu">☰</button>
+    </header>
+    <div id="goalBanner" class="goal-banner"></div>
+
+    <nav id="tabs">
+      <button data-tab="office" class="tab active"><span data-i18n="tabOffice">📰 Office</span></button>
+      <button data-tab="produce" class="tab"><span data-i18n="tabProduce">🎬 Produce</span></button>
+      <button data-tab="library" class="tab"><span data-i18n="tabLibrary">📼 Library</span> <span id="libCount" class="pill">0</span></button>
+      <button data-tab="studio" class="tab"><span data-i18n="tabStudio">🏢 Studio</span></button>
+    </nav>
+
+    <main id="main">
+      <!-- OFFICE -->
+      <section id="tab-office" class="tabpane">
+        <div class="grid2">
+          <div class="card">
+            <h3 data-i18n="healthTitle">📊 Studio health</h3>
+            <div class="health-row"><span data-i18n="cash">Cash</span><b id="hCash"></b></div>
+            <div class="bar"><div id="barCash" class="fill cash"></div></div>
+            <div class="health-row"><span data-i18n="rep">Reputation</span><b id="hRep"></b></div>
+            <div class="bar"><div id="barRep" class="fill rep"></div></div>
+            <div class="health-row"><span data-i18n="fans">Fanbase</span><b id="hFans"></b></div>
+            <div class="bar"><div id="barFans" class="fill fans"></div></div>
+            <div class="health-row"><span data-i18n="debt">Bank debt</span><b id="hDebt"></b></div>
+            <div class="health-row"><span data-i18n="streak">🔥 Hype streak</span><b id="hStreak"></b></div>
+            <div id="trendBox" class="trends"></div>
+          </div>
+          <div class="card">
+            <h3 data-i18n="boardTitle">🎯 Board expectations</h3>
+            <div id="boardBox"></div>
+            <button id="greenlightCta" class="btn-gold big" data-i18n="greenlight">＋ GREENLIGHT NEW MOVIE</button>
+          </div>
+        </div>
+        <div class="card">
+          <h3 data-i18n="sagaTitle">📜 Golden Reel Saga</h3>
+          <div id="sagaBox"></div>
+        </div>
+        <div class="card">
+          <h3><span data-i18n="actionsTitle">⚡ Mogul actions</span> <small class="muted" data-i18n="actionsSub">— things to do between films</small></h3>
+          <div id="actionBox" class="act-grid"></div>
+        </div>
+        <div class="card">
+          <h3><span data-i18n="wireTitle">🗞️ Industry wire</span> <button id="advanceBtn" class="btn-ghost small hidden">Next →</button></h3>
+          <div id="newsFeed" class="feed"></div>
+        </div>
+      </section>
+
+      <!-- PRODUCE -->
+      <section id="tab-produce" class="tabpane hidden">
+        <div id="wizard"></div>
+      </section>
+
+      <!-- LIBRARY -->
+      <section id="tab-library" class="tabpane hidden">
+        <div class="row-between">
+          <h3 style="margin:0" data-i18n="filmoTitle">📼 Filmography</h3>
+          <select id="libSort">
+            <option value="new" data-i18n="sortNew">Newest</option>
+            <option value="gross" data-i18n="sortGross">Top gross</option>
+            <option value="review" data-i18n="sortReview">Top rated</option>
+            <option value="profit" data-i18n="sortProfit">Most profitable</option>
+          </select>
+        </div>
+        <div id="libStats" class="lib-stats"></div>
+        <div id="libraryGrid" class="lib-grid"></div>
+      </section>
+
+      <!-- STUDIO -->
+      <section id="tab-studio" class="tabpane hidden">
+        <div class="card">
+          <h3><span data-i18n="upgTitle">🏢 Studio upgrades</span> <small class="muted" data-i18n="upgSub">— your "stadium"</small></h3>
+          <div id="upgradeBox"></div>
+        </div>
+        <div class="card">
+          <h3><span data-i18n="staffTitle">💼 Executives</span> <small class="muted" data-i18n="staffSub">— hired muscle, paid yearly</small></h3>
+          <div id="staffBox"></div>
+        </div>
+        <div class="card">
+          <h3><span data-i18n="relicsEquipped">🎖️ Equipped relics</span> <small class="muted" data-i18n="relicsLegacy">— legacy loot, permanent across careers</small></h3>
+          <div id="relicLine" class="ach-grid"></div>
+        </div>
+        <div class="grid2">
+          <div class="card"><h3 data-i18n="rosterTitle">🎭 Under contract</h3><div id="rosterBox"></div></div>
+          <div class="card"><h3 data-i18n="chartTitle">📈 Box office chart</h3><div id="chartBox"></div></div>
+        </div>
+        <div class="grid2">
+          <div class="card"><h3 data-i18n="rivalsTitle">🏁 Rival studios</h3><div id="rivalBox"></div></div>
+          <div class="card"><h3 data-i18n="achTitle">🏅 Achievements</h3><div id="achBox"></div></div>
+        </div>
+      </section>
+    </main>
+
+    <!-- MENU -->
+    <div id="menuModal" class="modal hidden">
+      <div class="modal-card">
+        <h2 data-i18n="menuTitle">Menu</h2>
+        <button class="btn-row" id="saveBtn" data-i18n="saveGame">💾 Save game</button>
+        <button class="btn-row" id="newBtn" data-i18n="newStudio">🎬 New studio (restart)</button>
+        <button class="btn-row" id="hofBtn" data-i18n="hofMenu">🏆 Hall of Fame</button>
+        <div class="row-between">
+          <button class="lang-btn" id="menuEN">🇬🇧 EN</button>
+          <button class="lang-btn" id="menuFR">🇫🇷 FR</button>
+        </div>
+        <button class="btn-row" id="menuClose" data-i18n="closeMenu">Close</button>
+      </div>
+    </div>
+
+    <!-- EVENT MODAL -->
+    <div id="eventModal" class="modal hidden">
+      <div class="modal-card event">
+        <div id="eventEmoji" class="event-emoji">🔥</div>
+        <h2 id="eventTitle"></h2>
+        <p id="eventText"></p>
+        <div id="eventBtns" class="event-btns"></div>
+      </div>
+    </div>
+
+    <!-- RESULT MODAL -->
+    <div id="resultModal" class="modal hidden">
+      <div class="modal-card result">
+        <div id="resPoster" class="poster">🎬</div>
+        <h2 id="resTitle"></h2>
+        <div id="resMeta" class="res-meta"></div>
+        <div id="resStars" class="stars"></div>
+        <div id="resNumbers" class="res-numbers"></div>
+        <p id="resReview" class="res-review"></p>
+        <div id="resVerdict" class="verdict"></div>
+        <button class="btn-gold big" id="resContinue" data-i18n="continueBtn">Continue →</button>
+      </div>
+    </div>
+
+    <!-- YEAR MODAL -->
+    <div id="yearModal" class="modal hidden">
+      <div class="modal-card">
+        <div class="event-emoji">🏆</div>
+        <h2 id="yearTitle">Year review</h2>
+        <div id="yearBody"></div>
+        <button class="btn-gold big" id="yearContinue" data-i18n="yearContinue">Start new year →</button>
+      </div>
+    </div>
+
+    <!-- GAMEOVER MODAL -->
+    <div id="overModal" class="modal hidden">
+      <div class="modal-card">
+        <div class="event-emoji" id="overEmoji">💸</div>
+        <h2 id="overTitle">Bankrupt!</h2>
+        <div id="overBody"></div>
+        <button class="btn-gold big" id="overRestart" data-i18n="overRestart">🎬 New studio</button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+  </div>
+</div>
+<script src="i18n.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
